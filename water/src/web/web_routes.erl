@@ -17,6 +17,7 @@
 -export([routing/2]).
 
 routing(Path, DataIn) ->
+    % ?DEBUG("DataIn: ~p~n", [DataIn]),
     case format_path (Path) of
         "/create_pool" ->
             web_callback:create_pool(DataIn);

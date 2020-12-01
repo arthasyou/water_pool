@@ -7,7 +7,7 @@
 %%% API
 %%%===================================================================
 start() ->
-    {ok, Data} = application:get_env(redis, connection),
+    {ok, Data} = application:get_env(water, redis),
     {Host,Port,DataBase,Password,ReconnectSleep,TimeOut} = prase_data(Data),
     {ok, C} = eredis:start_link(Host,Port,DataBase,Password,ReconnectSleep,TimeOut),
     recorder:insert(redis, C).

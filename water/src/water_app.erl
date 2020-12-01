@@ -11,9 +11,9 @@
 
 start(_StartType, _StartArgs) ->
 	Reply = water_sup:start_link(),
-	web:start(),
+    redis:start(),
+	web:start(),    
     water:start(),
-    rand:seed(exs1024s, 1),
 	Reply.
 
 stop(_State) ->

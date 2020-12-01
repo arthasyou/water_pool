@@ -1,6 +1,6 @@
--sname erl_frame
+-sname warter
 
--setcookie erl_frame_cookie
+-setcookie warter_cookie
 
 +K true
 +A30

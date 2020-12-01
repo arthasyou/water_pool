@@ -1,6 +1,8 @@
 # Build stage 0
 FROM erlang:alpine
 
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh
 # Set working directory
 RUN mkdir /buildroot
 WORKDIR /buildroot
@@ -10,6 +12,8 @@ COPY water water
 
 # And build the release
 WORKDIR water
+
+
 RUN rebar3 as prod release
 
 # Build stage 1

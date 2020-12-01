@@ -27,17 +27,13 @@ get_state(Pot, Wave) ->
     end.
 
 create_wave(Pot, BaseLine, Boundary) ->
-    ?DEBUG("Pot:~p, BaseLine:~p, Boundary:~p~n", [Pot, BaseLine, Boundary]),
     Down = Pot - BaseLine,
     Up = Boundary - Pot,
     Rand = rand:uniform(Down+Up),
-    ?DEBUG("Rand:~p~n", [Rand]),
     case Rand < Up of
         true ->
-            ?DEBUG("going:~p~n", [up]),
             span_wave(Pot, Boundary);
         false ->
-            ?DEBUG("going:~p~n", [down]),
             span_wave(Pot, BaseLine)
     end.
     % spec_wave().
