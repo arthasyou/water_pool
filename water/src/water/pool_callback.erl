@@ -4,27 +4,29 @@
 -include("pool.hrl").
 
 -define(SPEED_RATE, 1000). %% 万分比
+-define(ASCENT_SPEED_RATE, 7000). %% 万分比
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
 -export([draw/3]).
--export([ascent_run/2, fall_run/2, run/2]).
 -export([pool_status/2]).
 
-draw(Odds, Data, Flag) ->
+draw(OddsRaw, Data, Flag) ->
     #pool_data{
         ratio = Ratio,
         segment = Segment,
         pot = Pot,
         pot_ratio = PotRatio,
+        brokerage_ratio = BrokerageRatio,
         base_line = BaseLine,
         boundary = Boundary,
         wave = Wave,
         suction = Suction,
         bonus = Bonus
     } = Data,
+    Odds = erlang:trunc(OddsRaw * Ratio), 
     {NewPot, NewSuction} = increase_pot(Pot, PotRatio, Suction, Ratio),
     
     {Result, NewWave, NewSegment, ReNewPot, NewBonus} =
@@ -32,7 +34,7 @@ draw(Odds, Data, Flag) ->
         ascent ->
             ascent(Odds, NewPot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus);
         fall ->
-            fall(Odds, NewPot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus)
+            fall(Odds, NewPot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus, BrokerageRatio)
     end,
     NewData = Data#pool_data{
         pot = ReNewPot,
@@ -56,12 +58,15 @@ pool_status(State, Data) ->
     } = Data,
     #{
         state => State,
-        pot => Pot,
+        pot => Pot / Ratio,
         wave => Data#pool_data.wave,
         segment => Data#pool_data.segment,
-        suction => Suction,
-        bonus => Bonus,
-        brokerage => Suction * BrokerageRatio div Ratio
+        suction => Suction div Ratio,
+        bonus => Bonus / Ratio,
+        brokerage => Suction * BrokerageRatio div Ratio / Ratio,
+        big_bonus => pool_dict:get_big_bonus(),
+        bb_line => pool_dict:get_ascent_big_bonus_base_line(),
+        miss_count => pool_dict:get_miss_count()
     }.
     % #{
     %     state => State,
@@ -81,7 +86,7 @@ pool_status(State, Data) ->
 ascent(Odds, Pot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus) ->
     case analyzing_ascent(Odds, Pot, Segment) of
         true ->
-            case ascent_run(Odds, Ratio) of
+            case ascent_run(Odds, Pot, Ratio) of
                 true ->
                     {NewPot, NewBonus} = decrease_pot(Pot, Odds, Bonus),
                     {true, Wave, Segment, NewPot, NewBonus};
@@ -92,10 +97,10 @@ ascent(Odds, Pot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus) ->
             ascent_action(Pot, Segment, Wave, BaseLine, Boundary, Bonus)
     end.
 
-fall(Odds, Pot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus) ->
+fall(Odds, Pot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus, BrokerageRatio) ->
     case analyzing_fall(Odds, Pot, BaseLine, Segment) of
         true ->
-            case fall_run(Odds, Ratio) of
+            case fall_run(Odds, Ratio, BrokerageRatio) of
                 true ->
                     fall_action(Odds, Pot, Segment, Wave, BaseLine, Boundary, Bonus);
                 false ->
@@ -147,20 +152,47 @@ analyzing_fall(Odds, Pot, BaseLine, Segment) ->
 
 %% ===================================================================
 
-ascent_run(Odds, Ratio) ->
-    NewOdds = Odds + Odds*?SPEED_RATE div Ratio,
-    run(NewOdds, Ratio).
+ascent_run(Odds, _Pot, Ratio) ->
+    % NewOdds = Odds + Odds*?ASCENT_SPEED_RATE div Ratio,
+    % run(NewOdds, Ratio).    
+    % case big_bonus:ascent_draw(Odds, Pot, Ratio) of
+    %     true ->
+    %         true;
+    %     false ->
+    %         NewOdds = Odds + Odds*?SPEED_RATE div Ratio,
+    %         run(NewOdds, Ratio)
+    % end.
 
-fall_run(Odds, Ratio) ->
-    NewOdds = Odds - Odds*?SPEED_RATE div Ratio,
-    run(NewOdds, Ratio).
+    case big_bonus:ascent_suction(Odds, Ratio) of
+        true ->
+            NewOdds = Odds + Odds*?SPEED_RATE div Ratio,
+            run(NewOdds, Ratio);
+        false ->
+            false
+    end.
+
+fall_run(Odds, Ratio, BrokerageRatio) ->
+    case big_bonus:fall_draw(Odds, Ratio, BrokerageRatio) of
+        true ->
+            true;
+        false ->
+            NewOdds = Odds + Odds*?SPEED_RATE div Ratio,
+            Result = run(NewOdds, Ratio),
+            case Result of
+                false ->
+                    big_bonus:increase_miss();
+                _ ->
+                    ok
+            end,
+            Result
+    end.
 
 run(Odds, Ratio) ->
     case Odds < Ratio of
         true ->
             true;
         false ->
-            Rand = rand:uniform(Odds),
+            Rand = rand1:range(1,Odds),
             Rand =< Ratio
     end.
 

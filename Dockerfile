@@ -7,12 +7,11 @@ RUN apk update && apk upgrade && \
 RUN mkdir /buildroot
 WORKDIR /buildroot
 
-# Copy our Erlang test application
+# Copy our Erlang application
 COPY water water
 
 # And build the release
-WORKDIR water
-
+WORKDIR /buildroot/water
 
 RUN rebar3 as prod release
 
@@ -27,7 +26,7 @@ RUN apk add --no-cache openssl && \
 COPY --from=0 /buildroot/water/_build/prod/rel/water /water
 
 # Expose relevant ports
-EXPOSE 18080
+EXPOSE 8080
 # EXPOSE 8443
 
 CMD ["/water/bin/water", "foreground"]

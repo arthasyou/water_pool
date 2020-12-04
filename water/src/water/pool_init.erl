@@ -9,7 +9,6 @@
 %%% API
 %%%===================================================================
 init(ID) ->
-    rand:seed(exs1024s, rand:uniform(9999999999999999)),
     Qeury = db:select('pool') ++ db:where([{id, "=", ID}]),
     {ok, [Item]} = db:query(Qeury),
     Data = get_data(ID, Item),

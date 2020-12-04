@@ -32,7 +32,12 @@ create_pool(FaceValue, Bullet, Brokerage, Ratio, Advance) ->
 
 draw(ID, Odds) -> 
     Flag = pool_server:draw(ID, Odds),
-    {ok, #{hit => Flag}}.
+    case Flag of
+        fail ->
+            {error, 1002};
+        _ ->
+            {ok, #{hit => Flag}}
+    end.
 
 
 %%%===================================================================

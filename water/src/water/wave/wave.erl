@@ -43,14 +43,15 @@ create_wave(Pot, BaseLine, Boundary) ->
 %%%===================================================================
 
 spec_wave() ->
-    [80000000, 90000000, 70000000, 80000000, 60000000, 70000000, 50000000, 60000000, 40000000, 50000000].
+    [90000000, 100000000].
+    % [80000000, 90000000, 70000000, 80000000, 60000000, 70000000, 50000000, 60000000, 40000000, 50000000].
 
 % five_wave() ->
 %     Ar = 1,
-%     Br = Ar*rd:take(?GOLD_LESS),    
-%     Cr = Ar*rd:take(?GOLD_MORE),
-%     Dr = Cr*rd:take(?GOLD_LESS),
-%     Er = Dr*rd:take(?GOLD_MORE),
+%     Br = Ar*rand1:range(?GOLD_LESS),    
+%     Cr = Ar*rand1:range(?GOLD_MORE),
+%     Dr = Cr*rand1:range(?GOLD_LESS),
+%     Er = Dr*rand1:range(?GOLD_MORE),
 %     Sum = Ar-Br+Cr-Dr+Er,
 %     A = 1/Sum,
 %     B = A*Br,
@@ -72,7 +73,8 @@ span_wave(From, To) ->
         Point = trunc(Acc + X),
         {Point, Point}
     end, From, Wave),
-    check_wave(W).
+    R = check_wave(W),
+    R.
     % L = lists:mapfoldl(fun(_X, N) ->
     %     {N, N+1}
     % end, 1, R),
@@ -89,7 +91,7 @@ check_wave(W) ->
     end, W).
 
 create_wave(Len) ->
-    Ratios = driving_wave(7),
+    Ratios = driving_wave(5),
     Lens = ratio_to_len(Len, Ratios),
     create_sub_wave(Lens, 1, []).
 
@@ -122,23 +124,23 @@ ratio_to_len(Len, Ratios) ->
 
 driving_wave(N) ->
     List = lists:seq(1, N),
-    Coefficients = span_driving_coefficient(List, 1, []),
+    Coefficients = span_driving_coefficient(List, 1, 1, []),
     % ?DEBUG("Coefficients:~p~n", [Coefficients]),
     span_ratio(Coefficients).
 
-span_driving_coefficient([], _, Results) ->
+span_driving_coefficient([], _, _, Results) ->
     lists:reverse(Results);
-span_driving_coefficient([H|T], Base, Results) ->
+span_driving_coefficient([H|T], Base, Drive, Results) ->
     Ratio =
     case H of
         1 ->
             1;
         N when N rem 2 == 1 ->
-            -Base*rd:take(?GOLD_MORE);
+            Base*rand1:range(?GOLD_MORE);
         _ ->
-            -Base*rd:take(?GOLD_LESS)
+            -Drive*rand1:range(?GOLD_LESS)
     end,
-    span_driving_coefficient(T, Ratio, [Ratio|Results]).
+    span_driving_coefficient(T, Base, Ratio, [Ratio|Results]).
 
 adjustment_wave() ->
     List = lists:seq(1, 3),
@@ -153,9 +155,9 @@ span_adjustment_coefficient([H|T], Results) ->
         1 ->
             1;
         N when N rem 2 == 1 ->
-            rd:take(?GOLD_ADJST_MORE);
+            rand1:range(?GOLD_ADJST_MORE);
         _ ->
-            -rd:take(?GOLD_ADJST_LESS)
+            -rand1:range(?GOLD_ADJST_LESS)
     end,
     span_adjustment_coefficient(T, [Ratio|Results]).
 

@@ -14,6 +14,9 @@ get_msg(2) ->
 get_msg(1001) ->    
     encode("佣金比率不可以超过计算比率的10%");
 
+get_msg(1002) ->    
+    encode("发送的ID不正确");
+
 get_msg(_) ->    
     encode("未知错误").
 
