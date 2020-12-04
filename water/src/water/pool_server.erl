@@ -53,6 +53,7 @@ detail(ID) ->
 %%%===================================================================
 
 init([ID]) ->
+    process_flag(trap_exit, true),
     pool_mgr:register(ID, self()),
     {State, Data} = pool_init:init(ID),
     {ok, State, Data}.
@@ -102,12 +103,18 @@ handle_event({call, From}, {draw, Odds}, State, Data) ->
 handle_event({call, From}, detail, State, Data) ->
     Reply = pool_callback:pool_status(State, Data),
     {keep_state_and_data, [{reply, From, Reply}]};
+handle_event(info, sync_db, _State, Data) ->
+    pool_init:sync_db(Data),
+    keep_state_and_data;
 handle_event(_EventType, _EventContent, _State, _Data) ->
     keep_state_and_data.
 
 terminate(_Reason, _State, Data) ->
+    % io:format("pid: ~p down~n", [self()]),
+    pool_init:sync_db(Data),
     #pool_data{id = ID} = Data,
     pool_mgr:unregister(ID),
+    
     ok.
 
 %% @private

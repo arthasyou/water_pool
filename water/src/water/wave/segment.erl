@@ -13,6 +13,7 @@ create_segment(Wave, Pot) ->
         false ->
             big_bonus:init_miss_count()
     end,
+    self()! sync_db,
     {Pot,H}.
 
 

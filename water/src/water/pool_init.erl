@@ -3,7 +3,7 @@
 -include("logger.hrl").
 -include("pool.hrl").
 
--export([init/1]).
+-export([init/1, sync_db/1]).
 
 %%%===================================================================
 %%% API
@@ -42,15 +42,15 @@ get_data(ID, Item) ->
         brokerage_ratio = BrokerageRatio, 
         pot_ratio = Ratio - BrokerageRatio,       
         bullet = Bullet,         
-        pot = Pot*Ratio,
+        pot = Pot,
         base_line = BaseLine,      
-        boundary = Boundary*Ratio,       
+        boundary = Boundary,       
         suction = Suction,        
         bonus = Bonus,         
         jackpot = JackPot,        
         advance = Advance,
-        wave = Wave,
-        segment = Segment
+        wave = transform:string_to_term(Wave),
+        segment = transform:string_to_term(Segment)
     }.
 
 get_state(Data) ->
@@ -90,3 +90,22 @@ reside_segment(Wave, Segment, Pot) ->
         _ ->
             Segment
     end.
+
+sync_db(Data) ->
+    #pool_data{
+        id = ID,
+        pot = Pot,
+        suction = Suction,        
+        bonus = Bonus,         
+        wave = Wave,
+        segment = Segment
+    } = Data,
+    Query = db:update(pool, [
+        {pot, Pot},
+        {suction, Suction},
+        {bonus, Bonus},
+        {wave, transform:term_to_string(Wave)},
+        {segment, transform:term_to_string(Segment)}
+    ]) ++ db:where([{id, "=", ID}]),
+    db:query(Query),
+    ok.

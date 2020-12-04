@@ -49,7 +49,7 @@ init([]) ->
         modules => [pool_mgr]
     },
     
-    ChildSpecs = [PoolSup, PoolMgr],
+    ChildSpecs = [PoolMgr, PoolSup],
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions

@@ -44,16 +44,17 @@ draw(ID, Odds) ->
 %%% Internal
 %%%===================================================================
 
-do_create_pool(FaceValue, Bullet, Brokerage, Ratio, Advance) ->
+do_create_pool(FaceValue, Bullet, BrokerageRatio, Ratio, Advance) ->
+    Pot = Advance*Ratio,
     Query = db:insert(pool, [
         {bullet, Bullet},
         {face_value, FaceValue},
-        {brokerage, Brokerage},
+        {brokerage, BrokerageRatio},
         {ratio, Ratio},
         {advance, Advance},
-        {pot, Advance}
+        {pot, Pot},
+        {boundary, Pot}
     ]),
-    % db:query(Query ++ "; SELECT LAST_INSERT_ID() as id;").
     case db:query(Query ++ "; SELECT LAST_INSERT_ID() as id;") of
         {ok, [#{id := ID}]} ->
             pool_sup:start_child([ID]),
