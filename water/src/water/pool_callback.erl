@@ -11,7 +11,8 @@
 %%%===================================================================
 
 -export([draw/3]).
--export([pool_status/2]).
+-export([pool_status/2, pool_data/1]).
+-export([add_advance/2]).
 
 draw(OddsRaw, Data, Flag) ->
     #pool_data{
@@ -77,6 +78,49 @@ pool_status(State, Data) ->
     %     bonus => Bonus div Ratio * Bullet,
     %     brokerage => Suction * BrokerageRatio div (Ratio * Ratio) * Bullet
     % }.
+
+pool_data(Data) ->
+    #pool_data{
+        ratio = Ratio,
+        pot = Pot,
+        suction = Suction,
+        bonus = Bonus,
+        brokerage_ratio = BrokerageRatio
+    } = Data,
+    {Head, _} = Data#pool_data.segment,
+    Wave = lists:map(fun(X) ->
+        X / Ratio
+    end, [Head|Data#pool_data.wave]),
+    #{
+        pot => Pot / Ratio,
+        wave => Wave,
+        suction => Suction div Ratio,
+        bonus => Bonus / Ratio,
+        brokerage => Suction * BrokerageRatio div Ratio / Ratio
+    }.
+
+%%%===================================================================
+add_advance(ValRaw, Data) ->
+    #pool_data{
+        ratio = Ratio,
+        pot = Pot,
+        advance = Advance,
+        base_line = BaseLine
+    } = Data,
+    Val = ValRaw * Ratio,
+    Boundary = Pot + Val,
+    NewAdvance = Val+Advance,
+    NewPot = Pot + Val,
+    {Wave, Segment} = fresh_wave(NewPot, BaseLine, Boundary),
+    NewData = Data#pool_data{
+        pot = NewPot,
+        wave = Wave,
+        segment = Segment,
+        advance = NewAdvance
+    },
+    State = wave:get_state(NewPot, Wave),
+    {State, NewData}.
+
     
 
 %%%===================================================================

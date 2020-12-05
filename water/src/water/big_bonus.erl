@@ -3,8 +3,8 @@
 -export([init_miss_count/0, init_ascent_base_line/1, increase_miss/0]).
 -export([fall_draw/3, ascent_draw/3, ascent_suction/2]).
 
--define(BIG_BONUS, [160, 180, 240]).
-% -define(BIG_BONUS, [100]).
+% -define(BIG_BONUS, [160, 180, 240]).
+-define(BIG_BONUS, [200,300]).
 
 -define(BIG_BONUS_BASE_LINE_SPEED, 100).
 -define(SUCTION_RATIO, 20).

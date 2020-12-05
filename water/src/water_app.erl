@@ -11,7 +11,7 @@
 
 start(_StartType, _StartArgs) ->
 	Reply = water_sup:start_link(),
-    redis:start(),
+    % redis:start(),
 	web:start(),    
     water:start(),
 	Reply.

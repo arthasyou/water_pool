@@ -8,7 +8,9 @@
 % -define(GOLD_LESS, [0.09, 0.146, 0.236, 0.382, 0.5, 0.618, 0.764, 0.854, 0.91]).
 % -define(GOLD_MORE, [1.099, 1.171, 1.309, 1.618, 2, 2.618, 4.237, 6.849, 11.111]).
 -define(GOLD_LESS, [0.382, 0.382, 0.5, 0.5, 0.5, 0.618, 0.618, 0.618, 0.764, 0.764, 0.764]).
--define(GOLD_MORE, [1, 1.309, 1.618, 2, 2.618]).
+-define(GOLD_MORE, [1, 1.309, 1.618]).
+% -define(GOLD_MORE, [1, 1.309, 1.618, 2, 2.618]).
+-define(GOLD_FIVE, [0.764, 1, 1.309, 1.618]).
 -define(GOLD_ADJST_MORE, [1, 1.309, 1.618]).
 -define(GOLD_ADJST_LESS, [0.618, 0.618, 0.764, 0.764, 0.764, 1, 1, 1, 1.171]).
 -define(DRIVING_WAVES_QUANTITY, [5,7,9,11]).
@@ -130,15 +132,18 @@ driving_wave(N) ->
 
 span_driving_coefficient([], _, _, Results) ->
     lists:reverse(Results);
-span_driving_coefficient([H|T], Base, Drive, Results) ->
+span_driving_coefficient([_], Base, LastWave, Results) ->
+    Ratio = -LastWave*rand1:range(?GOLD_FIVE),
+    span_driving_coefficient([], Base, Ratio, [Ratio|Results]);
+span_driving_coefficient([H|T], Base, LastWave, Results) ->
     Ratio =
     case H of
         1 ->
-            1;
+            1;            
         N when N rem 2 == 1 ->
             Base*rand1:range(?GOLD_MORE);
         _ ->
-            -Drive*rand1:range(?GOLD_LESS)
+            -LastWave*rand1:range(?GOLD_LESS)
     end,
     span_driving_coefficient(T, Base, Ratio, [Ratio|Results]).
 

@@ -98,12 +98,15 @@ sync_db(Data) ->
         suction = Suction,        
         bonus = Bonus,         
         wave = Wave,
-        segment = Segment
+        segment = Segment,
+        advance = Advance
+
     } = Data,
     Query = db:update(pool, [
         {pot, Pot},
         {suction, Suction},
         {bonus, Bonus},
+        {advance, Advance},
         {wave, transform:term_to_string(Wave)},
         {segment, transform:term_to_string(Segment)}
     ]) ++ db:where([{id, "=", ID}]),

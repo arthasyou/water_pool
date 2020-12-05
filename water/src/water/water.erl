@@ -2,7 +2,7 @@
 
 -include("logger.hrl").
 
--export([start/0, draw/2, create_pool/5]).
+-export([start/0, draw/2, create_pool/5, add_advance/2, pool_data/1]).
 
 %%%===================================================================
 %%% API
@@ -37,6 +37,24 @@ draw(ID, Odds) ->
             {error, 1002};
         _ ->
             {ok, #{hit => Flag}}
+    end.
+
+add_advance(ID, Val) ->
+    Flag = pool_server:add_advance(ID, Val),
+    case Flag of
+        fail ->
+            {error, 1};
+        _ ->
+            {ok, []}
+    end.
+
+pool_data(ID) ->
+    Data = pool_server:pool_data(ID),
+    case Data of
+        fail ->
+            {error, 1};
+        _ ->
+            {ok, Data}
     end.
 
 

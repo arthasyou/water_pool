@@ -14,7 +14,7 @@
 -behaviour(gen_statem).
 
 %% API
--export([start_link/1, draw/2, detail/1]).
+-export([start_link/1, draw/2, detail/1, pool_data/1, add_advance/2]).
 
 %% gen_statem callbacks
 -export([init/1, format_status/2, handle_event/4, terminate/3,
@@ -44,6 +44,22 @@ detail(ID) ->
     case pool_mgr:get_pid(ID) of
         {ok, PID} ->
             gen_statem:call(PID, detail);
+        _ ->
+            fail
+    end.
+
+pool_data(ID) ->
+    case pool_mgr:get_pid(ID) of
+        {ok, PID} ->
+            gen_statem:call(PID, data);
+        _ ->
+            fail
+    end.
+
+add_advance(ID, Val) ->
+    case pool_mgr:get_pid(ID) of
+        {ok, PID} ->
+            gen_statem:call(PID, {add_advance, Val});
         _ ->
             fail
     end.
@@ -100,12 +116,21 @@ format_status(_Opt, [_PDict, _State, _Data]) ->
 handle_event({call, From}, {draw, Odds}, State, Data) ->
     {NextState, NewData, Reply} = pool_callback:draw(Odds, Data, State),
     {next_state, NextState, NewData, [{reply, From, Reply}]};
+
 handle_event({call, From}, detail, State, Data) ->
     Reply = pool_callback:pool_status(State, Data),
     {keep_state_and_data, [{reply, From, Reply}]};
+handle_event({call, From}, data, _State, Data) ->
+    Reply = pool_callback:pool_data(Data),
+    {keep_state_and_data, [{reply, From, Reply}]};
+handle_event({call, From}, {add_advance, Val}, _State, Data) ->
+    {NextState, NewData} = pool_callback:add_advance(Val, Data),
+    {next_state, NextState, NewData, [{reply, From, ok}]};
+
 handle_event(info, sync_db, _State, Data) ->
     pool_init:sync_db(Data),
     keep_state_and_data;
+
 handle_event(_EventType, _EventContent, _State, _Data) ->
     keep_state_and_data.
 
