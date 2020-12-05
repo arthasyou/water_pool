@@ -4,7 +4,7 @@
 -include("pool.hrl").
 
 -define(SPEED_RATE, 1000). %% 万分比
--define(ASCENT_SPEED_RATE, 7000). %% 万分比
+-define(ASCENT_SPEED_RATE, 1500). %% 万分比
 
 %%%===================================================================
 %%% API
@@ -69,15 +69,6 @@ pool_status(State, Data) ->
         bb_line => pool_dict:get_ascent_big_bonus_base_line(),
         miss_count => pool_dict:get_miss_count()
     }.
-    % #{
-    %     state => State,
-    %     pot => Pot div Ratio * Bullet,
-    %     wave => Data#pool_data.wave,
-    %     segment => Data#pool_data.segment,
-    %     suction => Suction div Ratio * Bullet,
-    %     bonus => Bonus div Ratio * Bullet,
-    %     brokerage => Suction * BrokerageRatio div (Ratio * Ratio) * Bullet
-    % }.
 
 pool_data(Data) ->
     #pool_data{
