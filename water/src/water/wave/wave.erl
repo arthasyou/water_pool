@@ -5,16 +5,11 @@
 -export([get_state/2, create_wave/3]).
 -export([driving_wave/1, adjustment_wave/0, create_wave/1, span_wave/2]).
 
-% -define(GOLD_LESS, [0.09, 0.146, 0.236, 0.382, 0.5, 0.618, 0.764, 0.854, 0.91]).
-% -define(GOLD_MORE, [1.099, 1.171, 1.309, 1.618, 2, 2.618, 4.237, 6.849, 11.111]).
--define(GOLD_LESS, [0.382, 0.382, 0.5, 0.5, 0.5, 0.618, 0.618, 0.618, 0.764, 0.764, 0.764]).
--define(GOLD_MORE, [1, 1.309, 1.618]).
-% -define(GOLD_MORE, [1, 1.309, 1.618, 2, 2.618]).
--define(GOLD_FIVE, [0.764, 1, 1.309, 1.618]).
--define(GOLD_ADJST_MORE, [1, 1.309, 1.618]).
--define(GOLD_ADJST_LESS, [0.618, 0.618, 0.764, 0.764, 0.764, 1, 1, 1, 1.171]).
--define(DRIVING_WAVES_QUANTITY, [5,7,9,11]).
--define(ADJUSTMENT_WAVES_QUANTITY, 3).
+-define(GOLD_LESS, [0.4, 0.5, 0.6, 0.7]).
+-define(GOLD_MORE, [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8]).
+-define(GOLD_FIVE, [0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3]).
+-define(GOLD_ADJST_MORE, [1, 1.1, 1.2, 1.3, 1.4, 1.5]).
+-define(GOLD_ADJST_LESS, [0.6, 0.7, 0.8, 0.9]).
 
 %%%===================================================================
 %%% API
@@ -46,25 +41,6 @@ create_wave(Pot, BaseLine, Boundary) ->
 
 spec_wave() ->
     [90000000, 100000000].
-    % [80000000, 90000000, 70000000, 80000000, 60000000, 70000000, 50000000, 60000000, 40000000, 50000000].
-
-% five_wave() ->
-%     Ar = 1,
-%     Br = Ar*rand1:range(?GOLD_LESS),    
-%     Cr = Ar*rand1:range(?GOLD_MORE),
-%     Dr = Cr*rand1:range(?GOLD_LESS),
-%     Er = Dr*rand1:range(?GOLD_MORE),
-%     Sum = Ar-Br+Cr-Dr+Er,
-%     A = 1/Sum,
-%     B = A*Br,
-%     C = A*Cr,
-%     D = A*Dr,
-%     E = A*Er,
-%     Bp = A-B,
-%     Cp = Bp+C,
-%     Dp = Cp-D,
-%     Ep = Dp+E,
-%     [0, A, Bp, Cp, Dp, Ep].
 
 %%%===================================================================
 
@@ -77,10 +53,6 @@ span_wave(From, To) ->
     end, From, Wave),
     R = check_wave(W),
     R.
-    % L = lists:mapfoldl(fun(_X, N) ->
-    %     {N, N+1}
-    % end, 1, R),
-    % {L, R}.
 
 check_wave(W) ->
     lists:map(fun(X) ->
@@ -127,7 +99,6 @@ ratio_to_len(Len, Ratios) ->
 driving_wave(N) ->
     List = lists:seq(1, N),
     Coefficients = span_driving_coefficient(List, 1, 1, []),
-    % ?DEBUG("Coefficients:~p~n", [Coefficients]),
     span_ratio(Coefficients).
 
 span_driving_coefficient([], _, _, Results) ->

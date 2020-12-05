@@ -5,6 +5,8 @@
 
 -define(SPEED_RATE, 1000). %% 万分比
 -define(ASCENT_SPEED_RATE, 1500). %% 万分比
+-define(BIG_ODDS, 1000000).
+-define(SPEED_BIG, 3000).
 
 %%%===================================================================
 %%% API
@@ -20,7 +22,6 @@ draw(OddsRaw, Data, Flag) ->
         segment = Segment,
         pot = Pot,
         pot_ratio = PotRatio,
-        brokerage_ratio = BrokerageRatio,
         base_line = BaseLine,
         boundary = Boundary,
         wave = Wave,
@@ -35,7 +36,7 @@ draw(OddsRaw, Data, Flag) ->
         ascent ->
             ascent(Odds, NewPot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus);
         fall ->
-            fall(Odds, NewPot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus, BrokerageRatio)
+            fall(Odds, NewPot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus)
     end,
     NewData = Data#pool_data{
         pot = ReNewPot,
@@ -64,10 +65,7 @@ pool_status(State, Data) ->
         segment => Data#pool_data.segment,
         suction => Suction div Ratio,
         bonus => Bonus / Ratio,
-        brokerage => Suction * BrokerageRatio div Ratio / Ratio,
-        big_bonus => pool_dict:get_big_bonus(),
-        bb_line => pool_dict:get_ascent_big_bonus_base_line(),
-        miss_count => pool_dict:get_miss_count()
+        brokerage => Suction * BrokerageRatio div Ratio / Ratio
     }.
 
 pool_data(Data) ->
@@ -132,10 +130,10 @@ ascent(Odds, Pot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus) ->
             ascent_action(Pot, Segment, Wave, BaseLine, Boundary, Bonus)
     end.
 
-fall(Odds, Pot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus, BrokerageRatio) ->
+fall(Odds, Pot, Segment, Ratio, Wave, BaseLine, Boundary, Bonus) ->
     case analyzing_fall(Odds, Pot, BaseLine, Segment) of
         true ->
-            case fall_run(Odds, Ratio, BrokerageRatio) of
+            case fall_run(Odds, Ratio) of
                 true ->
                     fall_action(Odds, Pot, Segment, Wave, BaseLine, Boundary, Bonus);
                 false ->
@@ -189,39 +187,17 @@ analyzing_fall(Odds, Pot, BaseLine, Segment) ->
 
 ascent_run(Odds, _Pot, Ratio) ->
     NewOdds = Odds + Odds*?ASCENT_SPEED_RATE div Ratio,
-    run(NewOdds, Ratio).    
+    run(NewOdds, Ratio).
 
-    % case big_bonus:ascent_draw(Odds, Pot, Ratio) of
-    %     true ->
-    %         true;
-    %     false ->
-    %         NewOdds = Odds + Odds*?SPEED_RATE div Ratio,
-    %         run(NewOdds, Ratio)
-    % end.
-
-    % case big_bonus:ascent_suction(Odds, Ratio) of
-    %     true ->
-    %         NewOdds = Odds + Odds*?SPEED_RATE div Ratio,
-    %         run(NewOdds, Ratio);
-    %     false ->
-    %         false
-    % end.
-
-fall_run(Odds, Ratio, BrokerageRatio) ->
-    case big_bonus:fall_draw(Odds, Ratio, BrokerageRatio) of
+fall_run(Odds, Ratio) ->
+    NewOdds = 
+    case Odds > ?BIG_ODDS of
         true ->
-            true;
+            Odds - Odds*?SPEED_BIG div Ratio;
         false ->
-            NewOdds = Odds + Odds*?SPEED_RATE div Ratio,
-            Result = run(NewOdds, Ratio),
-            case Result of
-                false ->
-                    big_bonus:increase_miss();
-                _ ->
-                    ok
-            end,
-            Result
-    end.
+            Odds - Odds*?SPEED_RATE div Ratio
+    end,
+    run(NewOdds, Ratio).
 
 run(Odds, Ratio) ->
     case Odds < Ratio of
