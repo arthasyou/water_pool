@@ -5,7 +5,7 @@
 %%%===================================================================
 -export([create_segment/2]).
 
-create_segment(Wave, Pot) ->    
+create_segment(Wave, Pot) ->
     [H|_] = Wave,
     case Pot < H of
         true ->
@@ -13,7 +13,7 @@ create_segment(Wave, Pot) ->
         false ->
             big_bonus:init_miss_count()
     end,
-    self()! sync_db,
+    self() ! sync_db,
     {Pot,H}.
 
 

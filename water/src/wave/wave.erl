@@ -50,7 +50,7 @@ spec_wave() ->
 
 % five_wave() ->
 %     Ar = 1,
-%     Br = Ar*rand1:range(?GOLD_LESS),    
+%     Br = Ar*rand1:range(?GOLD_LESS),
 %     Cr = Ar*rand1:range(?GOLD_MORE),
 %     Dr = Cr*rand1:range(?GOLD_LESS),
 %     Er = Dr*rand1:range(?GOLD_MORE),
@@ -75,41 +75,33 @@ span_wave(From, To) ->
         Point = trunc(Acc + X),
         {Point, Point}
     end, From, Wave),
-    R = check_wave(W),
-    R.
-    % L = lists:mapfoldl(fun(_X, N) ->
-    %     {N, N+1}
-    % end, 1, R),
-    % {L, R}.
-
-check_wave(W) ->
-    lists:map(fun(X) ->
-        case X < 0 of
-            true ->
-                0;
-            false ->
-                X
-        end
-    end, W).
+    W.
 
 create_wave(Len) ->
     Ratios = driving_wave(5),
     Lens = ratio_to_len(Len, Ratios),
-    create_sub_wave(Lens, 1, []).
+    create_level_wave(Lens, 3).
 
-create_sub_wave([], _N, Rs) ->
+create_level_wave(Lens, 0) ->
+    Lens;
+create_level_wave(Lens, N) ->
+    Lens2 = create_sub_wave(Lens, []),
+    create_level_wave(Lens2, N-1).
+
+create_sub_wave([], Rs) ->
     Rs;
-create_sub_wave([H|T], N, Rs) ->
+create_sub_wave([H|T], Rs) ->
+    {Len, Flag} = H,
     Ratios =
-    case N rem 2 of
-        1 ->
+    case Flag of
+        driving ->
             driving_wave(5);
-        0 ->
+        adjustment ->
             adjustment_wave()
     end,
     Wave = ratio_to_len(H, Ratios),
     NewRs = Rs ++ Wave,
-    create_sub_wave(T, N+1, NewRs).
+    create_sub_wave(T, NewRs).
 
 
 
@@ -127,8 +119,8 @@ ratio_to_len(Len, Ratios) ->
 driving_wave(N) ->
     List = lists:seq(1, N),
     Coefficients = span_driving_coefficient(List, 1, 1, []),
-    % ?DEBUG("Coefficients:~p~n", [Coefficients]),
-    span_ratio(Coefficients).
+    Ratios = span_ratio(Coefficients),
+    add_flag(Ratios).
 
 span_driving_coefficient([], _, _, Results) ->
     lists:reverse(Results);
@@ -139,7 +131,7 @@ span_driving_coefficient([H|T], Base, LastWave, Results) ->
     Ratio =
     case H of
         1 ->
-            1;            
+            1;
         N when N rem 2 == 1 ->
             Base*rand1:range(?GOLD_MORE);
         _ ->
@@ -150,7 +142,8 @@ span_driving_coefficient([H|T], Base, LastWave, Results) ->
 adjustment_wave() ->
     List = lists:seq(1, 3),
     Coefficients = span_adjustment_coefficient(List, []),
-    span_ratio(Coefficients).
+    Ratios = span_ratio(Coefficients),
+    add_flag(Ratios).
 
 span_adjustment_coefficient([], Results) ->
     lists:reverse(Results);
@@ -175,6 +168,20 @@ span_ratio([], _, _, Results) ->
 span_ratio([H|T], Base, Last, Results) ->
     Ratio = Base*H+Last,
     span_ratio(T, Base, Ratio, [Ratio|Results]).
+
+add_flag(Ratios) ->
+    add_flag(Ratios, 1, []).
+add_flag([], _, R) ->
+    lists:reverse(R);
+add_flag([H|T], N, R) ->
+    Flag =
+    case N rem 2 of
+        1 ->
+            driving;
+        0 ->
+            adjustment
+    end,
+    add_flag(T, N+1, [{H, Flag} | R]).
 
 
 %%%===================================================================
